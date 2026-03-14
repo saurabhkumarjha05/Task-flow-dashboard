@@ -11,7 +11,7 @@ interface TaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: Task | null;
-  onSubmit: (data: { title: string; description?: string; status?: TaskStatus; priority?: TaskPriority; due_date?: string }) => Promise<void>;
+  onSubmit: (data: { title: string; description: string; status: TaskStatus; priority: TaskPriority }) => Promise<void>;
 }
 
 export function TaskModal({ open, onOpenChange, task, onSubmit }: TaskModalProps) {
@@ -19,22 +19,19 @@ export function TaskModal({ open, onOpenChange, task, onSubmit }: TaskModalProps
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<TaskStatus>('pending');
   const [priority, setPriority] = useState<TaskPriority>('medium');
-  const [dueDate, setDueDate] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (task) {
       setTitle(task.title);
-      setDescription(task.description || '');
-      setStatus(task.status as TaskStatus);
-      setPriority((task.priority as TaskPriority) || 'medium');
-      setDueDate(task.due_date ? task.due_date.split('T')[0] : '');
+      setDescription(task.description);
+      setStatus(task.status);
+      setPriority(task.priority);
     } else {
       setTitle('');
       setDescription('');
       setStatus('pending');
       setPriority('medium');
-      setDueDate('');
     }
   }, [task, open]);
 
@@ -45,15 +42,13 @@ export function TaskModal({ open, onOpenChange, task, onSubmit }: TaskModalProps
     try {
       await onSubmit({ 
         title: title.trim(), 
-        description: description.trim() || undefined, 
+        description: description.trim(), 
         status,
-        priority,
-        due_date: dueDate || undefined
+        priority
       });
       onOpenChange(false);
     } catch (err) {
       console.error('Task submission error:', err);
-      // Error is already handled in the useTasks hook with toast
     } finally {
       setLoading(false);
     }
@@ -102,16 +97,6 @@ export function TaskModal({ open, onOpenChange, task, onSubmit }: TaskModalProps
                 <SelectItem value="high">High</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="due_date" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Due Date</Label>
-            <Input
-              id="due_date"
-              type="date"
-              value={dueDate}
-              onChange={e => setDueDate(e.target.value)}
-              className="h-10"
-            />
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</Label>

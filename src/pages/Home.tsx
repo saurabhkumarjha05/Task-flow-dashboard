@@ -16,12 +16,12 @@ const features = [
   {
     icon: CheckCircle2,
     title: 'Smart Task Management',
-    description: 'Organize your tasks with priority levels, due dates, and status tracking.',
+    description: 'Organize your tasks with priority levels and status tracking.',
   },
   {
     icon: Clock,
-    title: 'Real-time Updates',
-    description: 'See changes instantly across all your devices with real-time synchronization.',
+    title: 'Local Storage',
+    description: 'Your tasks are stored locally in your browser for instant access.',
   },
   {
     icon: Target,
@@ -31,12 +31,12 @@ const features = [
   {
     icon: Zap,
     title: 'Lightning Fast',
-    description: 'Blazing fast performance with modern React and optimized database queries.',
+    description: 'Blazing fast performance with no backend dependencies.',
   },
   {
     icon: Calendar,
-    title: 'Due Date Tracking',
-    description: 'Never miss a deadline with visual due date indicators and overdue warnings.',
+    title: 'Task Creation',
+    description: 'Create, edit, and delete tasks with a beautiful, intuitive interface.',
   },
   {
     icon: BarChart3,
@@ -46,10 +46,10 @@ const features = [
 ];
 
 const stats = [
-  { label: 'Tasks Managed', value: '10K+' },
-  { label: 'Active Users', value: '1K+' },
-  { label: 'Productivity Boost', value: '40%' },
-  { label: 'Uptime', value: '99.9%' },
+  { label: 'Tasks Managed', value: 'Local' },
+  { label: 'Data Privacy', value: '100%' },
+  { label: 'Offline Access', value: 'Always' },
+  { label: 'Speed', value: 'Instant' },
 ];
 
 export default function Home() {
@@ -69,8 +69,8 @@ export default function Home() {
                 <span className="block text-primary">Smart Task Management</span>
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-                Transform your productivity with intelligent task organization, real-time collaboration, and powerful analytics. 
-                The modern way to manage your work and achieve your goals.
+                Transform your productivity with intelligent task organization and powerful analytics. 
+                The modern way to manage your work and achieve your goals - all stored locally in your browser.
               </p>
             </motion.div>
             
@@ -159,10 +159,10 @@ export default function Home() {
             className="text-center"
           >
             <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Powerful Features for Modern Teams
+              Powerful Features for Modern Task Management
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Everything you need to manage tasks efficiently and boost productivity.
+              Everything you need to manage tasks efficiently and boost productivity - all in your browser.
             </p>
           </motion.div>
 
@@ -208,11 +208,11 @@ export default function Home() {
             className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-secondary p-12 text-center"
           >
             <div className="relative z-10">
-              <h2 className="text-3xl font-bold tracking-tight text-primary-foreground sm:text-4xl">
+              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                 Ready to Transform Your Productivity?
               </h2>
               <p className="mt-4 text-lg text-primary-foreground/90">
-                Join thousands of users who have already streamlined their workflow with TaskFlow.
+                Join thousands of users who have already streamlined their workflow with TaskFlow's local task management.
               </p>
               <div className="mt-8 flex items-center justify-center gap-x-6">
                 <Button size="lg" variant="secondary" className="gap-2" asChild>
@@ -222,7 +222,7 @@ export default function Home() {
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary" asChild>
-                  <Link to="/signup">Create Free Account</Link>
+                  <Link to="/dashboard">Get Started</Link>
                 </Button>
               </div>
             </div>

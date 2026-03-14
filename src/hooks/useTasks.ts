@@ -1,190 +1,115 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { Tables } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
-import { getSchemaErrorMessage } from '@/lib/db-schema-check';
+import { Task, TaskStatus, TaskPriority, createTask as createTaskUtil, updateTask as updateTaskUtil, deleteTask as deleteTaskUtil, getTasks } from '@/utils/localStorageManager';
 
-export type Task = Tables<'tasks'>;
-export type TaskStatus = 'pending' | 'in-progress' | 'completed';
-export type TaskPriority = 'low' | 'medium' | 'high';
-export type TaskInsert = {
-  title: string;
-  description?: string;
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  due_date?: string;
-};
+export type { Task, TaskStatus, TaskPriority };
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchTasks = useCallback(async () => {
+  // Load tasks from localStorage on mount
+  const fetchTasks = useCallback(() => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('User not authenticated');
-        setTasks([]);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching tasks:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch tasks',
-          variant: 'destructive',
-        });
-        setTasks([]);
-        return;
-      }
-      setTasks(data || []);
+      setLoading(true);
+      const storedTasks = getTasks();
+      setTasks(storedTasks);
     } catch (error) {
-      console.error('Unexpected error fetching tasks:', error);
+      console.error('Error fetching tasks:', error);
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred',
+        description: 'Failed to load tasks',
         variant: 'destructive',
       });
-      setTasks([]);
     } finally {
       setLoading(false);
     }
   }, [toast]);
 
+  // Load tasks on component mount
   useEffect(() => {
     fetchTasks();
-
-    const channel = supabase
-      .channel('tasks-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
-        fetchTasks();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [fetchTasks]);
 
-  const createTask = async (task: TaskInsert) => {
+  // Create a new task
+  const createTask = useCallback(async (taskData: Omit<Task, 'id' | 'createdAt'>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      // Prepare the task data with proper null handling
-      const taskData = {
-        title: task.title,
-        description: task.description || null,
-        status: task.status || 'pending',
-        priority: task.priority || 'medium',
-        due_date: task.due_date ? new Date(task.due_date).toISOString() : null,
-        user_id: user.id,
-      };
-
-      const { error } = await supabase.from('tasks').insert(taskData);
-      if (error) {
-        console.error('Error creating task:', error);
-        toast({
-          title: 'Error',
-          description: getSchemaErrorMessage(error),
-          variant: 'destructive',
-        });
-        throw error;
-      }
+      const newTask = createTaskUtil(taskData);
+      setTasks(prev => [newTask, ...prev]);
       
       toast({
         title: 'Success',
         description: 'Task created successfully',
       });
-    } catch (error: any) {
+      
+      return newTask;
+    } catch (error) {
       console.error('Error creating task:', error);
       toast({
         title: 'Error',
-        description: getSchemaErrorMessage(error),
+        description: 'Failed to create task',
         variant: 'destructive',
       });
       throw error;
     }
-  };
+  }, [toast]);
 
-  const updateTask = async (id: string, updates: Partial<TaskInsert>) => {
+  // Update an existing task
+  const updateTask = useCallback(async (id: string, updates: Partial<Omit<Task, 'id' | 'createdAt'>>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      // Prepare the update data with proper null handling
-      const updateData = {
-        ...updates,
-        due_date: updates.due_date ? new Date(updates.due_date).toISOString() : null,
-      };
-
-      const { error } = await supabase
-        .from('tasks')
-        .update(updateData)
-        .eq('id', id)
-        .eq('user_id', user.id);
-      
-      if (error) {
-        console.error('Error updating task:', error);
-        toast({
-          title: 'Error',
-          description: getSchemaErrorMessage(error),
-          variant: 'destructive',
-        });
-        throw error;
+      const updatedTask = updateTaskUtil(id, updates);
+      if (!updatedTask) {
+        throw new Error('Task not found');
       }
+      
+      setTasks(prev => prev.map(task => 
+        task.id === id ? updatedTask : task
+      ));
       
       toast({
         title: 'Success',
         description: 'Task updated successfully',
       });
-    } catch (error: any) {
+      
+      return updatedTask;
+    } catch (error) {
       console.error('Error updating task:', error);
       toast({
         title: 'Error',
-        description: getSchemaErrorMessage(error),
+        description: 'Failed to update task',
         variant: 'destructive',
       });
       throw error;
     }
-  };
+  }, [toast]);
 
-  const deleteTask = async (id: string) => {
+  // Delete a task
+  const deleteTask = useCallback(async (id: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-      if (error) throw error;
+      const success = deleteTaskUtil(id);
+      if (!success) {
+        throw new Error('Task not found');
+      }
+      
+      setTasks(prev => prev.filter(task => task.id !== id));
       
       toast({
         title: 'Success',
         description: 'Task deleted successfully',
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting task:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to delete task',
+        description: 'Failed to delete task',
         variant: 'destructive',
       });
       throw error;
     }
-  };
+  }, [toast]);
 
+  // Calculate statistics
   const stats = {
     total: tasks.length,
     pending: tasks.filter(t => t.status === 'pending').length,
@@ -192,5 +117,13 @@ export function useTasks() {
     completed: tasks.filter(t => t.status === 'completed').length,
   };
 
-  return { tasks, loading, stats, createTask, updateTask, deleteTask, fetchTasks };
+  return { 
+    tasks, 
+    loading, 
+    stats, 
+    createTask, 
+    updateTask, 
+    deleteTask, 
+    fetchTasks 
+  };
 }

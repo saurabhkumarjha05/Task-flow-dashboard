@@ -19,9 +19,6 @@ export async function checkTasksTableSchema(): Promise<SchemaCheckResult> {
       // If there's a schema error, it will likely mention missing columns
       const missingColumns: string[] = [];
       
-      if (error.message.includes('due_date')) {
-        missingColumns.push('due_date');
-      }
       if (error.message.includes('priority')) {
         missingColumns.push('priority');
       }
@@ -34,7 +31,7 @@ export async function checkTasksTableSchema(): Promise<SchemaCheckResult> {
       };
     }
 
-    // Expected columns for the tasks table
+    // Expected columns for the tasks table (without due_date)
     const expectedColumns = [
       'id',
       'user_id', 
@@ -42,7 +39,6 @@ export async function checkTasksTableSchema(): Promise<SchemaCheckResult> {
       'description',
       'status',
       'priority',
-      'due_date',
       'created_at',
       'updated_at'
     ];
@@ -65,7 +61,7 @@ export async function checkTasksTableSchema(): Promise<SchemaCheckResult> {
   } catch (error) {
     return {
       isValid: false,
-      missingColumns: ['due_date', 'priority'],
+      missingColumns: ['priority'],
       existingColumns: [],
       error: `Schema check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
     };

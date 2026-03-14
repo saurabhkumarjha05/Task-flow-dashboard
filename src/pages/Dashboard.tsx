@@ -7,13 +7,11 @@ import { TaskModal } from '@/components/dashboard/TaskModal';
 import { DeleteDialog } from '@/components/dashboard/DeleteDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/hooks/useAuth';
 import { useTasks } from '@/hooks/useTasks';
 import type { Task, TaskStatus, TaskPriority } from '@/hooks/useTasks';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
-  const { user } = useAuth();
   const { tasks, loading, stats, createTask, updateTask, deleteTask } = useTasks();
   const { toast } = useToast();
 
@@ -24,14 +22,14 @@ export default function Dashboard() {
 
   const filteredTasks = tasks.filter(t =>
     t.title.toLowerCase().includes(search.toLowerCase()) ||
-    t.description?.toLowerCase().includes(search.toLowerCase())
+    t.description.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleCreate = async (data: { title: string; description?: string; status?: TaskStatus; priority?: TaskPriority; due_date?: string }) => {
+  const handleCreate = async (data: { title: string; description: string; status: TaskStatus; priority: TaskPriority }) => {
     await createTask(data);
   };
 
-  const handleUpdate = async (data: { title: string; description?: string; status?: TaskStatus; priority?: TaskPriority; due_date?: string }) => {
+  const handleUpdate = async (data: { title: string; description: string; status: TaskStatus; priority: TaskPriority }) => {
     if (!editingTask) return;
     await updateTask(editingTask.id, data);
   };
@@ -46,7 +44,7 @@ export default function Dashboard() {
     await updateTask(task.id, { status: status as TaskStatus });
   };
 
-  const greeting = user?.email?.split('@')[0] || 'there';
+  const greeting = "there";
 
   return (
     <div className="min-h-screen bg-background">
