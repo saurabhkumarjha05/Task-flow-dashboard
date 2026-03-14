@@ -5,19 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Task, TaskStatus } from '@/hooks/useTasks';
+import type { Task, TaskStatus, TaskPriority } from '@/hooks/useTasks';
 
 interface TaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: Task | null;
-  onSubmit: (data: { title: string; description?: string; status?: TaskStatus }) => Promise<void>;
+  onSubmit: (data: { title: string; description?: string; status?: TaskStatus; priority?: TaskPriority; due_date?: string }) => Promise<void>;
 }
 
 export function TaskModal({ open, onOpenChange, task, onSubmit }: TaskModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<TaskStatus>('pending');
+  const [priority, setPriority] = useState<TaskPriority>('medium');
+  const [dueDate, setDueDate] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -25,10 +27,14 @@ export function TaskModal({ open, onOpenChange, task, onSubmit }: TaskModalProps
       setTitle(task.title);
       setDescription(task.description || '');
       setStatus(task.status as TaskStatus);
+      setPriority((task.priority as TaskPriority) || 'medium');
+      setDueDate(task.due_date ? task.due_date.split('T')[0] : '');
     } else {
       setTitle('');
       setDescription('');
       setStatus('pending');
+      setPriority('medium');
+      setDueDate('');
     }
   }, [task, open]);
 
@@ -37,10 +43,17 @@ export function TaskModal({ open, onOpenChange, task, onSubmit }: TaskModalProps
     if (!title.trim()) return;
     setLoading(true);
     try {
-      await onSubmit({ title: title.trim(), description: description.trim() || undefined, status });
+      await onSubmit({ 
+        title: title.trim(), 
+        description: description.trim() || undefined, 
+        status,
+        priority,
+        due_date: dueDate || undefined
+      });
       onOpenChange(false);
     } catch (err) {
-      console.error(err);
+      console.error('Task submission error:', err);
+      // Error is already handled in the useTasks hook with toast
     } finally {
       setLoading(false);
     }
@@ -75,6 +88,29 @@ export function TaskModal({ open, onOpenChange, task, onSubmit }: TaskModalProps
               onChange={e => setDescription(e.target.value)}
               placeholder="Add details…"
               rows={3}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Priority</Label>
+            <Select value={priority} onValueChange={v => setPriority(v as TaskPriority)}>
+              <SelectTrigger className="h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="due_date" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Due Date</Label>
+            <Input
+              id="due_date"
+              type="date"
+              value={dueDate}
+              onChange={e => setDueDate(e.target.value)}
+              className="h-10"
             />
           </div>
           <div className="space-y-2">

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import type { Task } from '@/hooks/useTasks';
-import { Pencil, Trash2, Calendar } from 'lucide-react';
+import type { Task, TaskPriority } from '@/hooks/useTasks';
+import { Pencil, Trash2, Calendar, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface TaskCardProps {
@@ -25,6 +25,21 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   },
 };
 
+const priorityConfig: Record<string, { label: string; className: string }> = {
+  low: {
+    label: 'Low',
+    className: 'bg-priority-low-bg text-priority-low border-transparent',
+  },
+  medium: {
+    label: 'Medium',
+    className: 'bg-priority-medium-bg text-priority-medium border-transparent',
+  },
+  high: {
+    label: 'High',
+    className: 'bg-priority-high-bg text-priority-high border-transparent',
+  },
+};
+
 const nextStatus: Record<string, string> = {
   pending: 'in-progress',
   'in-progress': 'completed',
@@ -32,7 +47,10 @@ const nextStatus: Record<string, string> = {
 };
 
 export function TaskCard({ task, onEdit, onDelete, onStatusChange }: TaskCardProps) {
-  const config = statusConfig[task.status] || statusConfig.pending;
+  const statusConfigItem = statusConfig[task.status] || statusConfig.pending;
+  const priorityConfigItem = priorityConfig[task.priority || 'medium'] || priorityConfig.medium;
+  
+  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed';
 
   return (
     <motion.div
@@ -42,10 +60,10 @@ export function TaskCard({ task, onEdit, onDelete, onStatusChange }: TaskCardPro
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-      className="group bg-card p-4 rounded-xl shadow-card hover:shadow-card-hover transition-all duration-200"
+      className={`group bg-card p-5 rounded-xl shadow-card hover:shadow-card-hover transition-all duration-200 border ${isOverdue ? 'border-destructive/20' : 'border-border'}`}
     >
-      <div className="flex justify-between items-start mb-2">
-        <h4 className="text-sm font-semibold text-foreground leading-tight pr-2">
+      <div className="flex justify-between items-start mb-3">
+        <h4 className="text-sm font-semibold text-foreground leading-tight pr-2 flex-1">
           {task.title}
         </h4>
         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex gap-0.5 shrink-0">
@@ -72,17 +90,41 @@ export function TaskCard({ task, onEdit, onDelete, onStatusChange }: TaskCardPro
         </p>
       )}
 
-      <div className="flex items-center justify-between pt-1 border-t border-border/50">
+      <div className="flex items-center gap-2 mb-3">
+        <Badge
+          className={`text-[10px] font-bold uppercase tracking-wider ${priorityConfigItem.className}`}
+        >
+          {priorityConfigItem.label}
+        </Badge>
+        {isOverdue && (
+          <div className="flex items-center gap-1 text-destructive text-[10px] font-medium">
+            <AlertTriangle className="h-3 w-3" />
+            Overdue
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between pt-3 border-t border-border/50">
         <Badge
           onClick={() => onStatusChange(task, nextStatus[task.status] || 'pending')}
-          className={`cursor-pointer text-[10px] font-bold uppercase tracking-wider ${config.className}`}
+          className={`cursor-pointer text-[10px] font-bold uppercase tracking-wider ${statusConfigItem.className}`}
         >
-          {config.label}
+          {statusConfigItem.label}
         </Badge>
-        <span className="flex items-center gap-1 text-[10px] text-muted-foreground tabular-nums">
-          <Calendar className="h-3 w-3" />
-          {new Date(task.created_at).toLocaleDateString()}
-        </span>
+        <div className="flex items-center gap-3 text-[10px] text-muted-foreground tabular-nums">
+          {task.due_date && (
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              <span className={isOverdue ? 'text-destructive font-medium' : ''}>
+                {new Date(task.due_date).toLocaleDateString()}
+              </span>
+            </div>
+          )}
+          <div className="flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            {new Date(task.created_at).toLocaleDateString()}
+          </div>
+        </div>
       </div>
     </motion.div>
   );

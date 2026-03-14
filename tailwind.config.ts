@@ -65,6 +65,14 @@ export default {
           "in-progress-bg": "hsl(var(--status-in-progress-bg))",
           "completed-bg": "hsl(var(--status-completed-bg))",
         },
+        priority: {
+          low: "hsl(var(--priority-low))",
+          medium: "hsl(var(--priority-medium))",
+          high: "hsl(var(--priority-high))",
+          "low-bg": "hsl(var(--priority-low-bg))",
+          "medium-bg": "hsl(var(--priority-medium-bg))",
+          "high-bg": "hsl(var(--priority-high-bg))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
